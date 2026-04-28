@@ -1,12 +1,12 @@
 # NoShowIQ
 
+NoShowIQ is an MLOps-ready appointment no-show prediction API. It predicts whether a patient is likely to miss a clinic appointment and returns a risk level, probability, and operational recommendation.
+
 ![CI/CD](https://github.com/wasifalipervez1993-pixel/noshow-iq-59613/actions/workflows/ci-cd.yml/badge.svg)
 
-NoShowIQ is an MLOps project for predicting patient appointment no-shows.
+## Live Deployment
 
-## Live Deployment URL
-
-Add after Hugging Face deployment:
+Hugging Face Space URL:
 
 ```text
-https://YOUR-HF-SPACE-URL.hf.space
+PASTE_YOUR_HUGGING_FACE_SPACE_URL_HERE
