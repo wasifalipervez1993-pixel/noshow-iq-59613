@@ -12,7 +12,7 @@ from sklearn.metrics import classification_report
 from sklearn.model_selection import train_test_split
 from sklearn.preprocessing import OneHotEncoder, StandardScaler
 
-from noshow_iq.preprocess import FEATURE_COLUMNS, split_features_target
+from noshow_iq.preprocess import split_features_target
 
 
 MODEL_PATH = Path("models/noshow_model.joblib")

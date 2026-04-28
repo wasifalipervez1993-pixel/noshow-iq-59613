@@ -22,6 +22,7 @@ COLUMN_RENAME_MAP: Dict[str, str] = {
     "No-show": "no_show",
 }
 
+
 FEATURE_COLUMNS: List[str] = [
     "gender",
     "age",
@@ -43,19 +44,26 @@ FEATURE_COLUMNS: List[str] = [
 
 
 def fix_column_names(df: pd.DataFrame) -> pd.DataFrame:
-    """Rename messy Kaggle columns into stable snake_case names."""
+    """Rename raw Kaggle columns to clean snake_case format."""
     return df.rename(columns=COLUMN_RENAME_MAP)
 
 
 def add_engineered_features(df: pd.DataFrame) -> pd.DataFrame:
-    """Create production-safe features from appointment dates and patient profile."""
+    """Add derived features required for modeling."""
     df = df.copy()
 
-    df["scheduled_day"] = pd.to_datetime(df["scheduled_day"], errors="coerce", utc=True)
-    df["appointment_day"] = pd.to_datetime(df["appointment_day"], errors="coerce", utc=True)
+    df["scheduled_day"] = pd.to_datetime(
+        df["scheduled_day"], errors="coerce", utc=True
+    )
+    df["appointment_day"] = pd.to_datetime(
+        df["appointment_day"], errors="coerce", utc=True
+    )
+
+    scheduled_dates = df["scheduled_day"].dt.date
+    appointment_dates = df["appointment_day"].dt.date
 
     df["days_in_advance"] = (
-        df["appointment_day"].dt.date - df["scheduled_day"].dt.date
+        appointment_dates - scheduled_dates
     ).apply(lambda delta: delta.days)
 
     df["appointment_weekday"] = df["appointment_day"].dt.weekday
@@ -66,22 +74,23 @@ def add_engineered_features(df: pd.DataFrame) -> pd.DataFrame:
     df["is_senior"] = (df["age"] >= 60).astype(int)
 
     chronic_cols = ["hypertension", "diabetes", "alcoholism", "handicap"]
-    df["has_chronic_condition"] = (df[chronic_cols].sum(axis=1) > 0).astype(int)
+    df["has_chronic_condition"] = (
+        df[chronic_cols].sum(axis=1) > 0
+    ).astype(int)
 
     return df
 
 
 def clean_data(df: pd.DataFrame, training: bool = True) -> pd.DataFrame:
     """
-    Clean raw NoShowIQ data.
+    Clean dataset and prepare it for modeling.
 
-    Decisions:
-    - Rename misspelled/unfriendly columns.
-    - Convert dates safely.
-    - Remove impossible negative ages.
-    - Remove rows where appointment date is before scheduling date.
-    - Keep age 0 because babies/infants are valid clinic patients.
-    - Convert target: Yes -> 1 means no-show risk, No -> 0 means showed up.
+    Key decisions:
+    - Rename inconsistent column names
+    - Remove invalid negative ages
+    - Remove invalid date records (appointment before scheduling)
+    - Keep age=0 (valid for infants)
+    - Encode target variable for training
     """
     df = fix_column_names(df)
     df = df.copy()
@@ -118,7 +127,7 @@ def clean_data(df: pd.DataFrame, training: bool = True) -> pd.DataFrame:
 
 
 def split_features_target(df: pd.DataFrame):
-    """Return X and y for model training."""
+    """Split cleaned dataframe into X and y."""
     cleaned = clean_data(df, training=True)
     X = cleaned[FEATURE_COLUMNS]
     y = cleaned["no_show"]
@@ -126,12 +135,16 @@ def split_features_target(df: pd.DataFrame):
 
 
 def clean_single_record(record: dict) -> pd.DataFrame:
-    """Clean one API input record and return one-row feature dataframe."""
+    """Prepare a single API input record for prediction."""
     raw = pd.DataFrame([record])
     cleaned = clean_data(raw, training=False)
 
-    missing = [col for col in FEATURE_COLUMNS if col not in cleaned.columns]
+    missing = [
+        col for col in FEATURE_COLUMNS if col not in cleaned.columns
+    ]
     if missing:
-        raise ValueError(f"Missing required feature columns after cleaning: {missing}")
+        raise ValueError(
+            f"Missing required feature columns after cleaning: {missing}"
+        )
 
     return cleaned[FEATURE_COLUMNS]
