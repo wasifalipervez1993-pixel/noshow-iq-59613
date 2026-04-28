@@ -36,9 +36,9 @@ jobs:
         run: |
           pytest -v
 
-      - name: Train model
-        run: |
-          python train_model.py
+      # - name: Train model
+      #   run: |
+      #     python train_model.py
 
       - name: Build Docker image
         run: |
