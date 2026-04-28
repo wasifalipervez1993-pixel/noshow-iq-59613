@@ -5,8 +5,7 @@ from typing import Any, Dict, Tuple
 
 import joblib
 import pandas as pd
-from imblearn.over_sampling import SMOTE
-from imblearn.pipeline import Pipeline
+from sklearn.pipeline import Pipeline
 from sklearn.compose import ColumnTransformer
 from sklearn.ensemble import RandomForestClassifier
 from sklearn.metrics import classification_report
@@ -62,7 +61,6 @@ def build_pipeline() -> Pipeline:
     pipeline = Pipeline(
         steps=[
             ("preprocessor", preprocessor),
-            ("smote", SMOTE(random_state=42)),
             ("classifier", classifier),
         ]
     )
@@ -102,7 +100,7 @@ def train(
     metrics = {
         "training_size": int(len(X_train)),
         "test_size": int(len(X_test)),
-        "imbalance_technique": "SMOTE plus class_weight balanced",
+        "imbalance_technique": "class_weight balanced",
         "classification_report": report,
     }
 
