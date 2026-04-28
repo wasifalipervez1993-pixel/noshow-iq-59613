@@ -4,11 +4,14 @@ import os
 from datetime import datetime, timezone
 from typing import Any, Dict, Optional
 
+from dotenv import load_dotenv
 from pymongo import MongoClient
+
+load_dotenv()
 
 
 def get_mongo_uri() -> str:
-    """Read MongoDB URI from environment only."""
+    """Read MongoDB URI from environment or a .env file."""
     mongo_uri = os.getenv("MONGO_URI")
     if not mongo_uri:
         raise RuntimeError("MONGO_URI environment variable is not configured.")

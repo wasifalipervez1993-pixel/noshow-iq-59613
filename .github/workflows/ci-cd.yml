@@ -31,6 +31,10 @@ jobs:
         run: |
           pytest -v
 
+      - name: Train model
+        run: |
+          python train_model.py
+
       - name: Build Docker image
         run: |
           docker build -t ${{ secrets.DOCKER_USERNAME }}/noshow-iq-59613:latest .
