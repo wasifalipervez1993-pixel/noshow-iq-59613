@@ -1,3 +1,12 @@
+---
+title: NoShowIQ 59613
+emoji: 🏥
+colorFrom: blue
+colorTo: green
+sdk: docker
+app_port: 7860
+---
+
 # NoShowIQ
 
 NoShowIQ is an MLOps-ready appointment no-show prediction API. It predicts whether a patient is likely to miss a clinic appointment and returns a risk level, probability, and operational recommendation.
