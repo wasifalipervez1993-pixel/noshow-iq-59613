@@ -136,3 +136,11 @@ def predict_batch(records: list[dict]):
             results.append({"error": str(exc)})
 
     return {"results": results}
+
+@app.get("/")
+def root():
+    return {
+        "message": "Welcome to NoShowIQ API",
+        "docs": "/docs",
+        "health": "/health",
+    }

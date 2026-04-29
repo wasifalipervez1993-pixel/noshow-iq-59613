@@ -247,7 +247,7 @@ PASS
 
 ## 👤 Author
 
-Muhammad Wasif Ali Pervez  
+Wasif Ali Pervez  
 MS Data Science — MLOps (Spring 2026)
 
 ---
