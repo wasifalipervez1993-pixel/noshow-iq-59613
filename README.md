@@ -19,3 +19,4 @@ Hugging Face Space URL:
 
 ```text
 PASTE_YOUR_HUGGING_FACE_SPACE_URL_HERE
+```

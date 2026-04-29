@@ -125,3 +125,19 @@ def get_stats():
     base_stats["last_trained"] = training[0]["last_trained"] if training else None
 
     return base_stats
+
+
+def detect_drift(training_metrics, recent_predictions):
+    try:
+        train_recall = training_metrics["classification_report"]["no_show"]["recall"]
+
+        recent_avg_prob = sum(p["probability"]
+                              for p in recent_predictions) / len(recent_predictions)
+
+        if abs(recent_avg_prob - train_recall) > 0.15:
+            return "DRIFT DETECTED"
+
+        return "STABLE"
+
+    except Exception:
+        return "INSUFFICIENT DATA"

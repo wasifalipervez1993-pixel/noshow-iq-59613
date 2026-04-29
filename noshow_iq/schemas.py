@@ -23,3 +23,5 @@ class PredictionResponse(BaseModel):
     risk_level: str
     probability: float
     recommendation: str
+    confidence: str
+    action_priority: str

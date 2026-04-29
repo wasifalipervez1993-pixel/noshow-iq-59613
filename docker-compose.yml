@@ -3,7 +3,7 @@ services:
     build: .
     container_name: noshow-iq-api
     ports:
-      - "8000:8000"
+      - "8000:7860"
     environment:
       MONGO_URI: mongodb://mongo:27017/noshow_iq
     depends_on:
