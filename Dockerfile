@@ -1,39 +1,34 @@
-FROM python:3.11-slim AS builder
+# ---------- BASE ----------
+FROM python:3.11-slim
 
 WORKDIR /app
 
-ENV PYTHONDONTWRITEBYTECODE=1
-ENV PYTHONUNBUFFERED=1
-
-RUN apt-get update \
-    && apt-get install -y --no-install-recommends build-essential \
+# Install minimal runtime deps ONLY
+RUN apt-get update && apt-get install -y --no-install-recommends \
+    gcc \
     && rm -rf /var/lib/apt/lists/*
 
+# Create non-root user
+RUN useradd -m appuser
+
+# Copy only requirements first (for caching)
 COPY requirements.txt .
-RUN pip install --upgrade pip \
-    && pip wheel --no-cache-dir --wheel-dir /wheels -r requirements.txt
 
-FROM python:3.11-slim AS runtime
+# Install dependencies WITHOUT cache
+RUN pip install --no-cache-dir -r requirements.txt
 
-WORKDIR /app
-
-ENV PYTHONDONTWRITEBYTECODE=1
-ENV PYTHONUNBUFFERED=1
-
-RUN useradd --create-home appuser
-
-COPY --from=builder /wheels /wheels
-COPY requirements.txt .
-RUN pip install --no-cache-dir /wheels/* \
-    && rm -rf /wheels
-
+# Copy ONLY required code
 COPY noshow_iq ./noshow_iq
 COPY models ./models
 COPY train_model.py .
-COPY README.md .
+COPY pyproject.toml .
 
+# Remove unnecessary files
+RUN rm -rf /root/.cache
+
+# Switch to non-root
 USER appuser
 
-EXPOSE 7860
+EXPOSE 8000
 
-CMD ["uvicorn", "noshow_iq.api:app", "--host", "0.0.0.0", "--port", "7860"]
+CMD ["uvicorn", "noshow_iq.api:app", "--host", "0.0.0.0", "--port", "8000"]
