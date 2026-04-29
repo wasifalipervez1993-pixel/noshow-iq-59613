@@ -31,7 +31,7 @@ async def lifespan(app: FastAPI):
 app = FastAPI(
     title="NoShowIQ",
     description="Appointment no-show prediction API.",
-    version="0.1.0",
+    version="0.2.0",
     lifespan=lifespan,
 )
 
@@ -51,7 +51,7 @@ def predict_appointment(payload: AppointmentRequest):
     if model is None:
         raise HTTPException(
             status_code=503,
-            detail="Model is not loaded. Train the model before prediction.",
+            detail="Model is not loaded. Train the model first.",
         )
 
     raw_input = payload.model_dump()
@@ -69,15 +69,14 @@ def predict_appointment(payload: AppointmentRequest):
         "risk_level": prediction["risk_level"],
         "probability": prediction["probability"],
         "recommendation": prediction["recommendation"],
+        "confidence": prediction.get("confidence"),
+        "action_priority": prediction.get("action_priority"),
     }
 
     try:
         insert_prediction(document)
-    except Exception as exc:
-        raise HTTPException(
-            status_code=500,
-            detail=f"Prediction made but MongoDB logging failed: {exc}",
-        ) from exc
+    except Exception:
+        pass
 
     return prediction
 
@@ -96,3 +95,44 @@ def stats():
         return get_stats()
     except Exception as exc:
         raise HTTPException(status_code=500, detail=str(exc)) from exc
+
+
+@app.post("/predict-batch")
+def predict_batch(records: list[dict]):
+    model = app_state.get("model")
+
+    if model is None:
+        raise HTTPException(
+            status_code=503,
+            detail="Model is not loaded.",
+        )
+
+    results = []
+
+    for record in records:
+        try:
+            cleaned_features = clean_single_record(record)
+            prediction = predict(model, cleaned_features)
+
+            document = {
+                "timestamp": now_utc(),
+                "raw_input": record,
+                "cleaned_features": cleaned_features.iloc[0].to_dict(),
+                "risk_level": prediction["risk_level"],
+                "probability": prediction["probability"],
+                "recommendation": prediction["recommendation"],
+                "confidence": prediction.get("confidence"),
+                "action_priority": prediction.get("action_priority"),
+            }
+
+            try:
+                insert_prediction(document)
+            except Exception:
+                pass
+
+            results.append(prediction)
+
+        except Exception as exc:
+            results.append({"error": str(exc)})
+
+    return {"results": results}

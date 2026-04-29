@@ -40,23 +40,31 @@ FEATURE_COLUMNS: List[str] = [
     "is_child",
     "is_senior",
     "has_chronic_condition",
+    "is_weekend",
+    "risk_group",
+    "sms_effective",
+    "wait_time_bin",
 ]
 
 
 def fix_column_names(df: pd.DataFrame) -> pd.DataFrame:
-    """Rename raw Kaggle columns to clean snake_case format."""
+    """Rename raw Kaggle columns to clean snake_case names."""
     return df.rename(columns=COLUMN_RENAME_MAP)
 
 
 def add_engineered_features(df: pd.DataFrame) -> pd.DataFrame:
-    """Add derived features required for modeling."""
+    """Add production-safe engineered features."""
     df = df.copy()
 
     df["scheduled_day"] = pd.to_datetime(
-        df["scheduled_day"], errors="coerce", utc=True
+        df["scheduled_day"],
+        errors="coerce",
+        utc=True,
     )
     df["appointment_day"] = pd.to_datetime(
-        df["appointment_day"], errors="coerce", utc=True
+        df["appointment_day"],
+        errors="coerce",
+        utc=True,
     )
 
     scheduled_dates = df["scheduled_day"].dt.date
@@ -75,28 +83,34 @@ def add_engineered_features(df: pd.DataFrame) -> pd.DataFrame:
 
     chronic_cols = ["hypertension", "diabetes", "alcoholism", "handicap"]
     df["has_chronic_condition"] = (
-        df[chronic_cols].sum(axis=1) > 0
+        df[chronic_cols].sum(
+            axis=1) > 0).astype(int)
+
+    df["is_weekend"] = df["appointment_weekday"].isin([5, 6]).astype(int)
+
+    df["risk_group"] = (
+        df["is_senior"] + df["has_chronic_condition"] + df["is_child"]
+    )
+
+    df["sms_effective"] = (
+        df["sms_received"] * (df["days_in_advance"] > 1)
     ).astype(int)
+
+    df["wait_time_bin"] = pd.cut(
+        df["days_in_advance"],
+        bins=[-1, 0, 3, 7, 30, 10_000],
+        labels=["same_day", "short", "medium", "long", "very_long"],
+    ).astype(str)
 
     return df
 
 
 def clean_data(df: pd.DataFrame, training: bool = True) -> pd.DataFrame:
-    """
-    Clean dataset and prepare it for modeling.
-
-    Key decisions:
-    - Rename inconsistent column names
-    - Remove invalid negative ages
-    - Remove invalid date records (appointment before scheduling)
-    - Keep age=0 (valid for infants)
-    - Encode target variable for training
-    """
+    """Clean raw data for training or prediction."""
     df = fix_column_names(df)
     df = df.copy()
 
-    if "age" in df.columns:
-        df = df[df["age"] >= 0]
+    df = df[df["age"] >= 0]
 
     df = add_engineered_features(df)
 
@@ -105,9 +119,8 @@ def clean_data(df: pd.DataFrame, training: bool = True) -> pd.DataFrame:
     if training and "no_show" in df.columns:
         df["no_show"] = df["no_show"].map({"No": 0, "Yes": 1}).astype(int)
 
-    for col in ["gender", "neighbourhood"]:
-        if col in df.columns:
-            df[col] = df[col].astype(str).str.strip().str.upper()
+    for col in ["gender", "neighbourhood", "wait_time_bin"]:
+        df[col] = df[col].astype(str).str.strip().str.upper()
 
     binary_cols = [
         "scholarship",
@@ -115,19 +128,25 @@ def clean_data(df: pd.DataFrame, training: bool = True) -> pd.DataFrame:
         "diabetes",
         "alcoholism",
         "sms_received",
+        "is_same_day",
+        "is_child",
+        "is_senior",
+        "has_chronic_condition",
+        "is_weekend",
+        "sms_effective",
     ]
-    for col in binary_cols:
-        if col in df.columns:
-            df[col] = df[col].astype(int)
 
-    if "handicap" in df.columns:
-        df["handicap"] = df["handicap"].astype(int)
+    for col in binary_cols:
+        df[col] = df[col].astype(int)
+
+    df["handicap"] = df["handicap"].astype(int)
+    df["risk_group"] = df["risk_group"].astype(int)
 
     return df
 
 
 def split_features_target(df: pd.DataFrame):
-    """Split cleaned dataframe into X and y."""
+    """Split cleaned dataframe into model features and target."""
     cleaned = clean_data(df, training=True)
     X = cleaned[FEATURE_COLUMNS]
     y = cleaned["no_show"]
@@ -135,16 +154,12 @@ def split_features_target(df: pd.DataFrame):
 
 
 def clean_single_record(record: dict) -> pd.DataFrame:
-    """Prepare a single API input record for prediction."""
+    """Clean one API input record."""
     raw = pd.DataFrame([record])
     cleaned = clean_data(raw, training=False)
 
-    missing = [
-        col for col in FEATURE_COLUMNS if col not in cleaned.columns
-    ]
+    missing = [col for col in FEATURE_COLUMNS if col not in cleaned.columns]
     if missing:
-        raise ValueError(
-            f"Missing required feature columns after cleaning: {missing}"
-        )
+        raise ValueError(f"Missing required feature columns: {missing}")
 
     return cleaned[FEATURE_COLUMNS]

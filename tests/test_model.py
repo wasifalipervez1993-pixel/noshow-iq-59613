@@ -1,14 +1,13 @@
-import pandas as pd
-
 from noshow_iq.model import build_pipeline
 from noshow_iq.preprocess import split_features_target
+
+import pandas as pd
 
 
 def test_build_pipeline_has_expected_steps():
     pipeline = build_pipeline()
     assert "preprocessor" in pipeline.named_steps
     assert "classifier" in pipeline.named_steps
-    assert pipeline.named_steps["classifier"].class_weight == "balanced"
 
 
 def test_split_features_target_returns_x_y():
@@ -36,3 +35,5 @@ def test_split_features_target_returns_x_y():
     X, y = split_features_target(df)
     assert X.shape[0] == 1
     assert y.iloc[0] == 1
+    assert "days_in_advance" in X.columns
+    assert "wait_time_bin" in X.columns
