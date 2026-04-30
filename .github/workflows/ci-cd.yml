@@ -55,6 +55,9 @@ jobs:
       - name: Trigger Hugging Face Space rebuild
         if: github.ref == 'refs/heads/main'
         run: |
-          curl --fail -X POST \
-            -H "Authorization: Bearer ${{ secrets.HF_TOKEN }}" \
-            https://huggingface.co/api/spaces/${{ secrets.HF_SPACE_ID }}/restart
+          git config --global user.email "github-actions[bot]@users.noreply.github.com"
+          git config --global user.name "github-actions[bot]"
+
+          git remote add hf-space https://huggingface.co/spaces/${{ secrets.HF_SPACE_ID }}
+
+          git push https://wasifalipervez123:${{ secrets.HF_TOKEN }}@huggingface.co/spaces/${{ secrets.HF_SPACE_ID }} HEAD:main --force
