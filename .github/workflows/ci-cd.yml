@@ -34,7 +34,7 @@ jobs:
 
       - name: Run pytest
         run: |
-           PYTHONPATH=. pytest tests -v
+          PYTHONPATH=. pytest tests -v
 
       - name: Build Docker image
         run: |
@@ -55,6 +55,6 @@ jobs:
       - name: Trigger Hugging Face Space rebuild
         if: github.ref == 'refs/heads/main'
         run: |
-          curl -X POST \
-          -H "Authorization: Bearer ${{ secrets.HF_TOKEN }}" \
-          https://huggingface.co/api/spaces/${{ secrets.HF_SPACE_ID }}/restart
+          curl --fail -X POST \
+            -H "Authorization: Bearer ${{ secrets.HF_TOKEN }}" \
+            https://huggingface.co/api/spaces/${{ secrets.HF_SPACE_ID }}/restart
