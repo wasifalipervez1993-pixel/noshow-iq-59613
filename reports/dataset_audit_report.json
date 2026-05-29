@@ -1,0 +1,102 @@
+{
+  "dataset_shape": {
+    "rows": 110527,
+    "columns": 14
+  },
+  "columns": [
+    "PatientId",
+    "AppointmentID",
+    "Gender",
+    "ScheduledDay",
+    "AppointmentDay",
+    "Age",
+    "Neighbourhood",
+    "Scholarship",
+    "Hipertension",
+    "Diabetes",
+    "Alcoholism",
+    "Handcap",
+    "SMS_received",
+    "No-show"
+  ],
+  "missing_values": {
+    "PatientId": 0,
+    "AppointmentID": 0,
+    "Gender": 0,
+    "ScheduledDay": 0,
+    "AppointmentDay": 0,
+    "Age": 0,
+    "Neighbourhood": 0,
+    "Scholarship": 0,
+    "Hipertension": 0,
+    "Diabetes": 0,
+    "Alcoholism": 0,
+    "Handcap": 0,
+    "SMS_received": 0,
+    "No-show": 0
+  },
+  "duplicate_rows": 0,
+  "duplicate_appointment_ids": 0,
+  "repeated_patient_ids": 48228,
+  "unique_patient_ids": 62299,
+  "unique_appointment_ids": 110527,
+  "age_quality": {
+    "minimum_age": -1,
+    "maximum_age": 115,
+    "negative_age_rows": 1,
+    "age_zero_rows": 3539,
+    "age_above_100_rows": 7
+  },
+  "date_quality": {
+    "invalid_scheduled_dates": 0,
+    "invalid_appointment_dates": 0,
+    "appointment_before_scheduled_rows": 5,
+    "minimum_days_in_advance": -6,
+    "maximum_days_in_advance": 179,
+    "mean_days_in_advance": 10.1837,
+    "median_days_in_advance": 4.0
+  },
+  "invalid_rows_removed_by_cleaning": 6,
+  "target_distribution": {
+    "No": 88208,
+    "Yes": 22319
+  },
+  "target_distribution_percentage": {
+    "No": 0.7981,
+    "Yes": 0.2019
+  },
+  "gender_distribution": {
+    "F": 71840,
+    "M": 38687
+  },
+  "handcap_distribution": {
+    "0": 108286,
+    "1": 2042,
+    "2": 183,
+    "3": 13,
+    "4": 3
+  },
+  "handcap_above_one_rows": 199,
+  "neighbourhood_unique_count": 81,
+  "top_10_neighbourhoods": {
+    "7717": 1,
+    "5805": 1,
+    "4431": 1,
+    "3877": 1,
+    "3514": 1,
+    "3334": 1,
+    "3132": 1,
+    "3131": 1,
+    "2853": 1,
+    "2773": 1
+  },
+  "cleaning_decisions": {
+    "remove_negative_age": true,
+    "keep_age_zero": true,
+    "remove_appointment_before_scheduled": true,
+    "keep_repeated_patient_ids": true,
+    "exclude_patient_id_from_features": true,
+    "exclude_appointment_id_from_features": true,
+    "keep_handcap_as_numeric_count": true
+  }
+}
